@@ -63,7 +63,7 @@ if nargin < 5
     metadata = false;
 end
 if nargin < 2
-    [hdrfile, path] = uigetfile2('*.vhdr', 'Select Brain Vision vhdr-file - pop_loadbv()');
+    [hdrfile, path] = uigetfile2({'*.vhdr' '*.ahdr'}, 'Select Brain Vision vhdr-file - pop_loadbv()');
     if hdrfile(1) == 0, return; end
 
     drawnow;
@@ -381,9 +381,15 @@ if isfield(hdr.commoninfos, 'markerfile')
     try 
         MRK = readbvconf(path, hdr.commoninfos.markerfile);
     catch
-        MRK = readbvconf(path, [hdrfile(1:end-4) 'vmrk' ]);
+        try
+            MRK = readbvconf(path, [hdrfile(1:end-4) 'vmrk' ]);
+        catch
+            fprintf(2, 'Warning: unable to find and import marker file defined in the header file\n')
+            fprintf(2, '         (there will be no events associated with the data)\n')
+            MRK = [];
+        end
     end
-    if ~isequal(hdr.commoninfos.datafile, MRK.commoninfos.datafile)
+    if ~isempty(MRK) && ~isequal(hdr.commoninfos.datafile, MRK.commoninfos.datafile)
         disp('pop_loadbv() warning: data files in header and marker files inconsistent.');
     end
 
